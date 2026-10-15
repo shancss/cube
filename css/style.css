@@ -1,0 +1,233 @@
+/* 3Blue1Brown 式：深底、少量文字、沒有邊框與卡片 */
+:root {
+  color-scheme: dark;
+  --bg: #111111;
+  --text: #ececec;
+  --muted: #8a8a8a;
+  --faint: #3a3a3a;
+  --blue: #58C4DD;
+  --red: #FC6255;
+  --yellow: #FFFF00;
+  --sans: "Microsoft JhengHei UI", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+  --kai: "DFKai-SB", "BiauKai", "Kaiti TC", "KaiTi", "Noto Serif TC", serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.label3d {
+  position: absolute; left: 0; top: 0;
+  white-space: nowrap;
+  font-size: 16px;
+  color: #fff;
+  text-shadow: 0 0 6px #000, 0 0 2px #000;
+  opacity: 0;
+}
+.label3d.big { font-size: 24px; color: var(--yellow); }
+.label3d.head { font-size: 20px; color: #fff; letter-spacing: .05em; }
+.label3d.dim { font-size: 15px; color: #cfcfcf; }
+.label3d.dim b { font-weight: 400; font-family: KaTeX_Main, "Times New Roman", serif; font-size: 19px; color: #fff; }
+
+button, input { font: inherit; color: inherit; }
+button {
+  background: none; border: 0; padding: 0;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .2s;
+}
+button:hover { color: var(--text); }
+button:disabled { color: var(--faint); cursor: default; }
+button:focus-visible, input:focus-visible { outline: 1px solid var(--blue); outline-offset: 3px; }
+input[type=range] { accent-color: var(--blue); width: 100%; height: 18px; }
+
+/* ---------- 頂列 ---------- */
+#top {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 24px 16px;
+  pointer-events: none;
+}
+#top nav, #top .top-right { display: flex; gap: 28px; pointer-events: auto; }
+.tab { font-size: 19px; padding-bottom: 3px; border-bottom: 2px solid transparent; }
+body[data-tab=explore] .tab[data-tab=explore],
+body[data-tab=limit] .tab[data-tab=limit] { color: var(--text); border-bottom-color: var(--blue); }
+.link b { color: var(--text); font-weight: 400; font-family: KaTeX_Main, "Times New Roman", serif; font-size: 17px; }
+
+#dims-pop {
+  position: fixed; top: 54px; right: 24px;
+  width: 250px; padding: 14px 16px;
+  background: rgba(17, 17, 17, .94);
+  border: 1px solid var(--faint);
+  z-index: 5;
+}
+#dims-pop label { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+#dims-pop input {
+  flex: 1; min-width: 0;
+  background: none; border: 0; border-bottom: 1px solid var(--faint);
+  padding: 2px 4px; text-align: right;
+  font-family: KaTeX_Main, "Times New Roman", serif; font-size: 17px;
+}
+#dims-pop label span { color: var(--muted); }
+#dims-pop label em { font-style: normal; min-width: 2em; }
+#dims-pop .chips { flex-direction: column; align-items: flex-start; gap: 2px; }
+#dims-pop .chips button { text-align: left; }
+body[data-tab=limit] .ft-only { display: none; }
+
+/* ---------- 共用小元件 ---------- */
+.group-title {
+  margin: 22px 0 8px; padding-bottom: 5px;
+  border-bottom: 1px solid #2c2c2c;
+  font-size: 13px; letter-spacing: .12em; color: #b0b0b0;
+}
+.group-title:first-child { margin-top: 0; }
+
+/* 縮圖選單：上排單一立體，下面一列一種拆解 */
+.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.tile, .rowtile { border: 1px solid transparent; border-radius: 6px; transition: color .2s, border-color .2s, background .2s; }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 0 5px; font-size: 13px; }
+.tile img { width: 100%; max-width: 50px; aspect-ratio: 1; }
+.rows { display: flex; flex-direction: column; gap: 2px; }
+.rowtile { display: flex; align-items: center; gap: 10px; width: 100%; padding: 2px 6px 2px 2px; text-align: left; }
+.rowtile img { width: 44px; height: 44px; flex: none; }
+.rowtile span { white-space: nowrap; }
+.rowtile em { font-style: normal; margin: 0 5px; color: #6a6a6a; }
+.tile img, .rowtile img { opacity: .72; transition: opacity .2s; }
+.tile img:not([src]), .rowtile img:not([src]) { display: none; }
+.tile:hover img, .rowtile:hover img, .tile.on img, .rowtile.on img { opacity: 1; }
+.tile.on, .rowtile.on { color: var(--text); border-color: var(--blue); background: rgba(88, 196, 221, .1); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.chips.col { flex-direction: column; align-items: flex-start; gap: 2px; }
+.chips button.on { color: var(--blue); }
+.chips button.primary { color: var(--yellow); font-size: 18px; }
+.hint { margin-top: 10px; font-size: 12px; line-height: 1.5; color: #6a6a6a; }
+label.slider { display: flex; align-items: center; gap: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ---------- 分頁一側欄 ---------- */
+#ex-panel {
+  position: fixed; left: 24px; top: 70px; bottom: 150px;
+  width: 236px;
+  padding-right: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--faint) transparent;
+}
+#ex-list { margin-top: 4px; }
+.vol-row {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 1px 0; text-align: left;
+}
+.vol-row i { width: 10px; height: 10px; flex: none; }
+.vol-row .num { margin-left: auto; color: var(--text); }
+.vol-row.on { color: var(--yellow); }
+.vol-row.on .num { color: var(--yellow); }
+.vol-more { color: var(--muted); font-size: 12px; }
+
+/* ---------- 分頁二：四分圖 ---------- */
+#lm-panel {
+  position: fixed; right: 24px; top: 70px;
+  width: min(300px, 26vw, 36vh);
+}
+#lm-svg { display: block; width: 100%; height: auto; }
+.dg-bg { fill: #1b1b1b; stroke: #555; stroke-width: .4; }
+.dg-level { opacity: 0; transition: opacity 1s; stroke: #111; }
+.dg-level.on { opacity: 1; }
+.dg-blue { fill: var(--blue); }
+.dg-red { fill: var(--red); }
+.dg-text { font-size: 5.5px; fill: #111; stroke: none; text-anchor: middle; font-family: var(--sans); }
+.dg-rest { fill: rgba(255, 255, 0, .07); stroke: var(--yellow); transition: all 1s; }
+.dg-rest.off { opacity: 0; }
+.dg-rest.hl { fill: rgba(255, 255, 0, .4); }
+.dg-rest-text { fill: var(--yellow); transition: opacity .5s; }
+.dg-rest-text.off { opacity: 0; }
+[data-cell].hl polygon { stroke: var(--yellow); stroke-width: 1.2; }
+
+#lm-bar { display: flex; height: 8px; margin-top: 14px; background: #333; }
+#lm-bar div { height: 100%; transition: width 1s; }
+#lm-bar-blue { background: var(--blue); }
+#lm-bar-red { background: var(--red); }
+#lm-rows { margin-top: 12px; }
+#lm-rows .row { display: flex; justify-content: space-between; align-items: center; min-height: 34px; color: var(--muted); }
+#lm-rows .row span:last-child { color: var(--text); font-size: 17px; }
+.legend { margin-top: 12px; font-size: 13px; color: var(--muted); }
+.legend > div { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+.legend span { margin-left: auto; color: var(--text); font-size: 15px; }
+.sw { width: 10px; height: 10px; flex: none; }
+.sw.blue { background: var(--blue); }
+.sw.red { background: var(--red); }
+.sw.rest { background: #333; outline: 1px solid var(--yellow); outline-offset: -1px; }
+
+/* ---------- 分頁二：上方的循環圖 ---------- */
+#lm-loop {
+  position: fixed; top: 52px; left: 24px; right: calc(min(300px, 26vw, 36vh) + 48px);
+  display: none; flex-direction: column; align-items: center; gap: 2px;
+  pointer-events: none;
+}
+.lp-row { display: flex; align-items: baseline; gap: 18px; font-size: 15px; color: var(--text); white-space: nowrap; }
+#lm-round { color: var(--yellow); font-size: 17px; }
+#lm-cut .sep { color: #555; margin: 0 8px; }
+#lm-loop svg { width: min(560px, 100%); height: auto; overflow: visible; }
+.lp-node { opacity: .4; transition: opacity .4s; }
+.lp-node.on { opacity: 1; }
+.lp-box { fill: none; stroke: #3a3a3a; stroke-width: 1.2; transition: stroke .4s; }
+.lp-node.on .lp-box { stroke: var(--yellow); }
+.lp-blue { fill: var(--blue); }
+.lp-red { fill: var(--red); }
+.lp-cut { stroke: var(--yellow); stroke-width: 1.5; stroke-dasharray: 3 2; }
+.lp-text { fill: #d8d8d8; font-size: 11.5px; text-anchor: middle; font-family: var(--sans); }
+.lp-arrow { stroke: #777; stroke-width: 1.5; fill: none; }
+.lp-head { fill: #777; }
+.lp-back-text { fill: #9a9a9a; font-size: 11px; }
+body[data-tab=limit] #lm-loop { display: flex; }
+
+/* ---------- 字幕與步驟列 ---------- */
+#bottom {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  padding: 40px 24px calc(18px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  background: linear-gradient(to top, var(--bg) 55%, rgba(17, 17, 17, 0));
+  pointer-events: none;
+}
+#caption { max-width: 900px; margin: 0 auto; transition: opacity .25s; }
+#caption.swap { opacity: 0; }
+#cap-quote { font-family: var(--kai); font-size: clamp(19px, 1.9vw, 26px); line-height: 1.5; color: #fff; }
+#cap-plain { margin-top: 4px; font-size: clamp(14px, 1.2vw, 17px); color: #a8a8a8; }
+#cap-math { margin-top: 4px; min-height: 30px; font-size: clamp(15px, 1.3vw, 18px); color: var(--text); }
+#cap-math .katex { font-size: 1.15em; }
+
+#lm-ctrl {
+  display: none;
+  align-items: center; justify-content: center; gap: 16px;
+  margin: 10px auto 0; max-width: 620px;
+  pointer-events: auto;
+}
+#lm-ctrl button { font-size: 17px; }
+#lm-ctrl button.on { color: var(--yellow); }
+#lm-ctrl input { flex: 1; }
+#lm-title { min-width: 120px; text-align: left; color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+/* ---------- 分頁與隱藏介面 ---------- */
+body[data-tab=explore] #lm-panel { display: none; }
+body[data-tab=limit] #ex-panel { display: none; }
+body[data-tab=limit] #lm-ctrl { display: flex; }
+
+body.clean #ex-panel, body.clean #lm-panel, body.clean #dims-pop,
+body.clean #top nav, body.clean #dims-toggle, body.clean #marks-toggle, body.clean #lm-ctrl { display: none; }
+body.clean #ui-toggle { opacity: .35; }
+
+.tex-fallback { font-family: "Times New Roman", serif; }
+
+@media (max-width: 760px) {
+  #ex-panel { width: 216px; left: 12px; }
+  #lm-panel { width: 150px; right: 12px; }
+  #top { padding: 12px; }
+  #top nav, #top .top-right { gap: 14px; }
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>九章算術・商功：塹堵、陽馬、鱉臑</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-tab="explore">
+
+<canvas id="stage"></canvas>
+<div id="labels"></div>
+
+<header id="top">
+  <nav>
+    <button class="tab" data-tab="explore">立體與拆解</button>
+    <button class="tab" data-tab="limit">劉徽的極限</button>
+  </nav>
+  <div class="top-right">
+    <button id="dims-toggle" class="link"><span id="top-a">廣</span> <b id="now-a"></b>　<span id="top-b">袤</span> <b id="now-b"></b>　高 <b id="now-h"></b></button>
+    <button id="marks-toggle" class="link" title="顯示或隱藏立體上的廣、袤、高">隱藏標示</button>
+    <button id="ui-toggle" class="link" title="隱藏或顯示介面（H）">隱藏介面</button>
+  </div>
+</header>
+
+<div id="dims-pop" class="ui" hidden>
+  <label><em id="lab-a">廣</em><input id="dim-a" type="number" min="0.5" max="500" step="0.5"><span>尺</span></label>
+  <label><em id="lab-b">袤</em><input id="dim-b" type="number" min="0.5" max="500" step="0.5"><span>尺</span></label>
+  <label><em>高</em><input id="dim-h" type="number" min="0.5" max="500" step="0.5"><span>尺</span></label>
+  <div class="group-title">原題數據</div>
+  <div class="chips">
+    <button data-dims="2,2,2" data-shape="qd2">劉徽的棊　2・2・2</button>
+    <button data-dims="5,7,8" data-shape="yangma">陽馬題　5・7・8</button>
+    <button data-dims="5,4,7" data-shape="bienao">鱉臑題　5・4・7</button>
+    <button data-dims="20,186,25" data-shape="qiandu">塹堵題　20・186・25</button>
+    <button class="ft-only" data-dims="50,40,50" data-shape="fangting">方亭題　下方 50・上方 40・高 50</button>
+    <button class="ft-only" data-dims="3,1,1" data-shape="ft9">劉徽的方亭棊　下方 3・上方 1・高 1</button>
+  </div>
+</div>
+
+<aside id="ex-panel" class="ui">
+  <div class="group-title">單一立體</div>
+  <div class="tiles">
+    <button class="tile" data-preset="box"><img alt=""><span>立方</span></button>
+    <button class="tile" data-preset="qiandu"><img alt=""><span>塹堵</span></button>
+    <button class="tile" data-preset="yangma"><img alt=""><span>陽馬</span></button>
+    <button class="tile" data-preset="bienao"><img alt=""><span>鱉臑</span></button>
+    <button class="tile" data-preset="fangting"><img alt=""><span>方亭</span></button>
+  </div>
+
+  <div class="group-title">九章的拆解</div>
+  <div class="rows">
+    <button class="rowtile" data-preset="box2"><img alt=""><span>立方<em>→</em>2 塹堵</span></button>
+    <button class="rowtile" data-preset="qd2"><img alt=""><span>塹堵<em>→</em>陽馬 + 鱉臑</span></button>
+    <button class="rowtile" data-preset="box3"><img alt=""><span>立方<em>→</em>3 陽馬</span></button>
+    <button class="rowtile" data-preset="ym2"><img alt=""><span>陽馬<em>→</em>2 鱉臑</span></button>
+    <button class="rowtile" data-preset="box6"><img alt=""><span>立方<em>→</em>6 鱉臑</span></button>
+  </div>
+
+  <div class="group-title">方亭</div>
+  <div class="rows">
+    <button class="rowtile" data-preset="ft9" title="中央立方一，四面塹堵四，四角陽馬四"><img alt=""><span>方亭<em>→</em>9 塊棊</span></button>
+    <button class="rowtile" data-preset="ft27" title="上下方相乘、下方自乘、上方自乘三個方柱，合起來是三個方亭"><img alt=""><span>三方柱<em>＝</em>三方亭</span></button>
+  </div>
+  <div class="chips" id="ex-asm-row" hidden>
+    <button id="ex-assemble" class="primary" title="把 27 塊棊搬過去拼成三個方亭，再按一次還原">▶ 拼成三個方亭</button>
+  </div>
+
+  <div class="group-title">分開 / 拼合</div>
+  <label class="slider">合<input id="ex-explode" type="range" min="0" max="100" value="0">分</label>
+  <div class="chips">
+    <button id="ex-home" title="把拖走的各塊移回原位">拖動歸位</button>
+    <button id="ex-restart" title="回到這個立體一開始的樣子，包含取消切割">全部重來</button>
+  </div>
+
+  <div class="group-title">自由切割</div>
+  <div class="chips">
+    <button id="ex-cut-toggle">顯示切割平面</button>
+  </div>
+  <div id="ex-cut-controls" hidden>
+    <div class="chips">
+      <button data-axis="x">垂直廣</button>
+      <button data-axis="z">垂直袤</button>
+      <button data-axis="y">垂直高</button>
+    </div>
+    <label class="slider">傾斜<input id="ex-cut-tilt" type="range" min="0" max="180" value="90"></label>
+    <label class="slider">轉向<input id="ex-cut-azim" type="range" min="0" max="360" value="0"></label>
+    <label class="slider">位置<input id="ex-cut-pos" type="range" min="-100" max="100" value="0"></label>
+    <div class="chips">
+      <button id="ex-cut-go" class="primary">切</button>
+    </div>
+    <div class="hint">先點選一塊就只切那一塊，否則全部一起切。</div>
+  </div>
+
+  <div class="group-title">體積（立方尺）</div>
+  <div id="ex-list"></div>
+  <div class="hint">拖空白處旋轉，滾輪縮放，右鍵平移。<br>拖任一塊可單獨移動。</div>
+</aside>
+
+<div id="lm-loop" class="ui">
+  <div class="lp-row"><span id="lm-round"></span><span id="lm-cut"></span></div>
+  <svg id="lm-loop-svg" viewBox="0 0 560 112" aria-label="一輪的過程：陽馬加鱉臑，從正中切開，會算的 2 比 1，剩下縮小一半的同一題，再回到開頭"></svg>
+</div>
+
+<aside id="lm-panel" class="ui">
+  <svg id="lm-svg" viewBox="-1 -1 102 102" aria-label="四分圖：整個塹堵的體積分配"></svg>
+  <div id="lm-bar"><div id="lm-bar-blue"></div><div id="lm-bar-red"></div></div>
+  <div id="lm-rows"></div>
+  <div class="legend">
+    <div><i class="sw blue"></i>陽馬（原文黑棊）已定<span id="lm-vol-blue"></span></div>
+    <div><i class="sw red"></i>鱉臑（赤棊）已定<span id="lm-vol-red"></span></div>
+    <div><i class="sw rest"></i>未定<span id="lm-vol-rest"></span></div>
+    <div class="hint">單位：立方尺。整個方格 ＝ 一個塹堵。</div>
+  </div>
+</aside>
+
+<footer id="bottom" class="ui">
+  <div id="caption">
+    <div id="cap-quote"></div>
+    <div id="cap-plain"></div>
+    <div id="cap-math"></div>
+  </div>
+  <div id="lm-ctrl">
+    <button id="lm-prev" title="上一步（←）">◀</button>
+    <input id="lm-slider" type="range" min="0" max="12" value="0">
+    <button id="lm-next" title="下一步（→）">▶</button>
+    <button id="lm-play" title="自動播放（空白鍵）">播放</button>
+    <span id="lm-title"></span>
+  </div>
+</footer>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/katex/katex.min.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/explore.js"></script>
+<script src="js/limit.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
