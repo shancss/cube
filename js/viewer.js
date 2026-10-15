@@ -208,8 +208,15 @@ window.JZ = window.JZ || {};
   Viewer.prototype.showMarks = function (on) {
     this.marksOn = on;
     if (!this.marks) return;
-    this.marks.lines.visible = on;
-    this.marks.labels.forEach(function (l) { l.el.style.display = on ? '' : 'none'; });
+    var vis = on && !this.marksHeld;
+    this.marks.lines.visible = vis;
+    this.marks.labels.forEach(function (l) { l.el.style.display = vis ? '' : 'none'; });
+  };
+
+  // 畫面暫時太擠時先收起尺寸標示（不改使用者的開關）
+  Viewer.prototype.holdMarks = function (held) {
+    this.marksHeld = held;
+    this.showMarks(this.marksOn !== false);
   };
 
   Viewer.prototype._frame = function (now) {

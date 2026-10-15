@@ -7,7 +7,7 @@ window.JZ = window.JZ || {};
   var SVG = 'http://www.w3.org/2000/svg';
 
   var MAX = 6;                       // 最多分割幾層
-  var SOLID = 0.92, DIM = 0.2;
+  var SOLID = 0.92, DIM = 0.2, GHOST = 0.08;
 
   // 每一步的畫面狀態。陽馬（藍）在左欄、鱉臑（紅）在右欄，會算的棊搬到上方排成一排排。
   // u[L]/d[L]：第 L 層「未定／已定」棊的不透明度；k[L]：第 L 層散開的程度；
@@ -45,16 +45,16 @@ window.JZ = window.JZ || {};
     {
       title: '合方',
       quote: '按餘數具而可知者有一、二分之別，即一、二之爲率定矣。',
-      plain: '把會算的搬到上面排好：藍色湊成 2 個小方，紅色湊成 1 個小方，正好 2 : 1。',
+      plain: '把會算的搬到前面排好：藍色湊成 2 個小方，紅色湊成 1 個小方，正好 2 : 1。原位留下淡淡的格子。',
       loop: { nodes: [3], round: 1, cut: 0, left: 1 },
-      set: function (s) { s.u[1] = DIM; s.d[1] = SOLID; s.known[1] = 1; s.lv = 1; s.view = 'all'; s.labels = 'head tally ratio'; }
+      set: function (s) { s.u[1] = DIM; s.d[1] = SOLID; s.known[1] = 1; s.lv = 1; s.view = 'all'; s.labels = 'head stack tally ratio'; }
     },
     {
       title: '其餘',
       quote: '其餘兩端各積本體。',
-      plain: '剩下的是 2 個小陽馬和 2 個小鱉臑：和原本的問題一模一樣，只是縮小一半。',
+      plain: '剩下 2 個小陽馬和 2 個小鱉臑。和淡色的原形比，只佔原本的 1/4，而且是同一個問題縮小一半。',
       loop: { nodes: [4], round: 1, cut: 0, left: 1 },
-      set: function (s) { s.u[1] = SOLID; s.d[1] = SOLID; s.known[1] = 1; s.lv = 1; s.view = 'all'; s.labels = 'head rest ratio'; }
+      set: function (s) { s.u[1] = SOLID; s.d[1] = SOLID; s.known[1] = 1; s.lv = 1; s.view = 'all'; s.labels = 'head stack rest ratio'; }
     },
     {
       title: '再分',
@@ -63,12 +63,12 @@ window.JZ = window.JZ || {};
       loop: { nodes: [2], round: 2, cut: 1 },
       set: function (s) {
         s.d[1] = SOLID; s.known[1] = 1;
-        s.u[2] = SOLID; s.d[2] = SOLID; s.k[2] = 0.32; s.lv = 1; s.view = 'all'; s.labels = 'head ratio';
+        s.u[2] = SOLID; s.d[2] = SOLID; s.k[2] = 0.32; s.lv = 1; s.view = 'all'; s.labels = 'head stack ratio';
       }
     }
   ];
   var DEEP = [
-    ['若爲數而窮之，置餘廣、袤、高之數各半之，則四分之三又可知也。', '會算的又搬上去排成第二排：藍色仍然是紅色的 2 倍。'],
+    ['若爲數而窮之，置餘廣、袤、高之數各半之，則四分之三又可知也。', '會算的又搬到前面，排成第二排：藍色仍然是紅色的 2 倍。'],
     ['半之彌少，其餘彌細。', '第 3 輪：上面每一排，藍色都正好是紅色的 2 倍寬。'],
     ['半之彌少，其餘彌細。', '第 4 輪：切的部分越來越小。'],
     ['至細曰微，微則無形。', '第 5 輪：剩下的縮成斜線上的細珠。'],
@@ -81,7 +81,7 @@ window.JZ = window.JZ || {};
       loop: { nodes: [2, 3, 4], round: n, cut: n - 1, left: n },
       set: function (s) {
         for (var L = 1; L <= n; L++) { s.d[L] = SOLID; s.known[L] = 1; }
-        s.u[n] = SOLID; s.lv = n; s.view = 'all'; s.labels = 'head ratio';
+        s.u[n] = SOLID; s.lv = n; s.view = 'all'; s.labels = 'head stack ratio';
       }
     });
   });
@@ -92,7 +92,7 @@ window.JZ = window.JZ || {};
     loop: { nodes: [], round: 0, cut: null },
     set: function (s) {
       for (var L = 1; L <= MAX; L++) { s.d[L] = SOLID; s.known[L] = 1; }
-      s.u[0] = 0.12; s.lv = MAX; s.final = true; s.view = 'all'; s.labels = 'head ratio';
+      s.u[0] = 0.12; s.lv = MAX; s.final = true; s.view = 'all'; s.labels = 'head stack ratio';
     }
   });
 
@@ -100,6 +100,7 @@ window.JZ = window.JZ || {};
     var s = { u: [], d: [], k: [], known: [], sep: step >= 1 ? 1 : 0, planes: 0, lv: 0, final: false, labels: '', view: 'cols' };
     for (var L = 0; L <= MAX; L++) { s.u.push(0); s.d.push(0); s.k.push(0); s.known.push(0); }
     STEPS[step].set(s);
+    s.g = s.known.map(function (k) { return k ? GHOST : 0; });
     return s;
   }
 
@@ -120,7 +121,7 @@ window.JZ = window.JZ || {};
     var self = this;
     return {
       pickables: function () {
-        return self.objs.filter(function (o) { return o.mat.op > 0.05; }).map(function (o) { return o.mesh; });
+        return self.objs.filter(function (o) { return !o.twin && o.mat.op > 0.05; }).map(function (o) { return o.mesh; });
       },
       canDrag: function () { return false; },
       onHover: function (mesh) { self._hover(mesh ? mesh.userData.obj : null); },
@@ -156,7 +157,7 @@ window.JZ = window.JZ || {};
       hidden: new THREE.LineBasicMaterial({
         color: C.white, transparent: true, opacity: 0, depthFunc: THREE.GreaterDepth, depthWrite: false
       }),
-      known: key.charAt(0) === 'd', L: L
+      known: key.charAt(0) === 'd', ghost: key.charAt(0) === 'g', L: L
     };
     this.mats.push(m);
     return m;
@@ -169,11 +170,13 @@ window.JZ = window.JZ || {};
     var near = function (v, f) { return Math.abs(v / unit - f) < 1e-6; };
     var yang = G.yangma(a, h, b), bie = G.bienao(a, h, b);
 
-    // 版面：陽馬在左欄 x∈[0,a]，鱉臑在右欄 x∈[Dx, Dx+a]；會算的棊排在上方，第 L 排的底在 rowY[L]
-    var Dx = a * 2, gapY = h * 0.14, sp = a * 0.08;
-    var rowY = [0, h * 1.3];
-    for (var r = 2; r <= MAX + 1; r++) rowY.push(rowY[r - 1] + h / Math.pow(2, r - 1) + gapY / Math.pow(2, r - 2));
-    this.layout = { Dx: Dx, rowY: rowY, top: rowY[MAX + 1] };
+    // 版面：陽馬在左欄 x∈[0,a]，鱉臑在右欄 x∈[Dx, Dx+a]。
+    // 會算的棊平鋪在各欄前方的地上：第 L 排從 zRow[L] 開始，一排排往前（往觀眾）排，越來越小。
+    var Dx = a * 2, gapZ = b * 0.35, sp = a * 0.08;
+    var zRow = [0, b + gapZ];
+    for (var r = 2; r <= MAX + 1; r++) zRow.push(zRow[r - 1] + b / Math.pow(2, r - 1) + gapZ / Math.pow(2, r - 1));
+    var zEnd = zRow[MAX + 1];
+    this.layout = { Dx: Dx, zEnd: zEnd };
 
     // 一個塹堵的「補塊」：在 a/2 × h/2 × b/2 的小方裡，和斜面另一側的塹堵合起來剛好是這個小方
     var fill = G.keep(G.box(a2, h2, b2), new V3(1 / a, 1 / h, 0), 0.5, true);
@@ -274,11 +277,13 @@ window.JZ = window.JZ || {};
           var home = colOff(kn.col).add(o).addScaledVector(kn.poly.centroid, ps);
           var parent = colOff(kn.col).add(o).addScaledVector(src.centroid, ps);
           var slot = kn.col ? i : 2 * i + kn.slot;
-          var corner = new V3((kn.col ? Dx : 0) + slot * step, rowY[L], b2 - b2 * ps / 2);
+          var corner = new V3((kn.col ? Dx : 0) + slot * step, 0, zRow[L]);
           add(kn.geom, self._mat(kn.key, L, kn.color), L, home, ps, home.clone().sub(parent), {
             cell: kn.cell, label: kn.label,
             slotPos: corner.addScaledVector(kn.rel, ps), quat: kn.quat, scaleTo: kn.scale
           });
+          // 搬走之後原位留下的淡影，看得出剩下的佔原本多少
+          add(kn.geom, self._mat('g' + kn.key, L, kn.color), L, home, ps, new V3(), { twin: true });
         });
       });
     }
@@ -309,13 +314,16 @@ window.JZ = window.JZ || {};
     var label = function (html, when, follow, pos, cls) {
       self.labels.push({ label: self.viewer.addLabel(html, cls), when: when, follow: follow, pos: pos, pFrom: new V3(), pTo: new V3() });
     };
-    var headY = function (st) { return st.view === 'all' ? rowY[MAX + 1] + h * 0.5 : h * 1.25; };
+    var headY = function () { return h * 1.25; };
     label('陽馬（藍）', 'head', null, function (st) { return new V3(a2, headY(st), b2); }, 'head');
     label('鱉臑（紅）', 'head', null, function (st) { return new V3(Dx + a2, headY(st), b2); }, 'head');
     this.objs.forEach(function (o) { if (o.L === 1 && o.mat.known) label(U.tex(o.label), 'frac', o, null, 'big'); });
-    label(U.tex('1+\\tfrac12+\\tfrac12=2'), 'tally', null, new V3(a2, rowY[1] + h2 + h * 0.2, b2), 'dim');
-    label(U.tex('\\tfrac12+\\tfrac12=1'), 'tally', null, new V3(Dx + a2 / 2, rowY[1] + h2 + h * 0.2, b2), 'dim');
-    label('2 ： 1', 'ratio', null, new V3((a + Dx) / 2 + a * 0.05, rowY[1] + h * 0.25, b2), 'big');
+    var front = zEnd + b * 0.3, row1 = zRow[1] + b2 / 2;
+    label('會算的（藍）', 'stack', null, new V3(a2, 0, front), 'dim');
+    label('會算的（紅）', 'stack', null, new V3(Dx + a2 / 2, 0, front), 'dim');
+    label(U.tex('1+\\tfrac12+\\tfrac12=2'), 'tally', null, new V3(a2, h * 0.8, row1), 'dim');
+    label(U.tex('\\tfrac12+\\tfrac12=1'), 'tally', null, new V3(Dx + a2 / 2, h * 0.8, row1), 'dim');
+    label('2 ： 1', 'ratio', null, new V3((a + Dx) / 2, h * 0.2, row1), 'big');
     label('2 個小陽馬', 'rest', null, new V3(a2, h * 0.5, b2), '');
     label('2 個小鱉臑', 'rest', null, new V3(Dx + a2, h * 0.5, b2), '');
     this.labels.forEach(function (l) { l.label.el.style.display = self.active ? '' : 'none'; });
@@ -354,7 +362,7 @@ window.JZ = window.JZ || {};
     });
     this.mats.forEach(function (m) {
       m.from = m.op;
-      m.to = (m.known ? st.d : st.u)[m.L];
+      m.to = (m.ghost ? st.g : m.known ? st.d : st.u)[m.L];
     });
     var pl = this.planes;
     pl.from = pl.op; pl.to = st.planes;
@@ -400,6 +408,8 @@ window.JZ = window.JZ || {};
     else apply(1);
 
     if (!prev || prev.view !== st.view) this.frame(animate);
+    // 前方排了會算的棊之後，尺寸標示會和它們疊在一起，先收起來
+    if (this.active) this.viewer.holdMarks(st.view === 'all');
     this._updateDiagram();
     this._updateLoop();
     this._updateUI();
@@ -413,11 +423,10 @@ window.JZ = window.JZ || {};
     if (!this.layout) return;
     var d = this.dims, lay = this.layout, view = this.state ? this.state.view : 'whole';
     var lo = new V3(0, 0, 0), hi = new V3(d.a, d.h, d.b);
-    if (view !== 'whole') hi.x = lay.Dx + d.a;
-    if (view === 'cols') hi.y = d.h * 1.35;
-    if (view === 'all') hi.y = lay.top + d.h * 0.6;
+    if (view !== 'whole') { hi.x = lay.Dx + d.a; hi.y = d.h * 1.35; }
+    if (view === 'all') hi.z = lay.zEnd + d.b * 0.4;
     var box = new THREE.Box3(lo, hi);
-    this.viewer.frame(box.getCenter(new V3()), box.getSize(new V3()).length() * (view === 'whole' ? 0.62 : 0.45), animate);
+    this.viewer.frame(box.getCenter(new V3()), box.getSize(new V3()).length() * (view === 'whole' ? 0.62 : 0.4), animate);
   };
 
   // ---------- 上方的循環圖 ----------
@@ -618,6 +627,7 @@ window.JZ = window.JZ || {};
     this.labels.forEach(function (l) { l.label.el.style.display = on ? '' : 'none'; });
     if (!on) this.setPlaying(false);
     else this._updateUI();
+    this.viewer.holdMarks(on && !!this.state && this.state.view === 'all');
   };
 
   JZ.Limit = Limit;
