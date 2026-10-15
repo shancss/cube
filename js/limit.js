@@ -33,19 +33,19 @@ window.JZ = window.JZ || {};
       quote: '於是中效其廣、袤，又中分其高。',
       plain: '兩塊都把廣、袤、高從正中切一刀。陽馬裂成 5 塊，鱉臑裂成 4 塊。',
       loop: { nodes: [2], round: 1, cut: 0 },
-      set: function (s) { s.u[1] = SOLID; s.d[1] = SOLID; s.k[1] = 0.32; s.planes = 1; s.labels = 'head'; }
+      set: function (s) { s.u[1] = SOLID; s.d[1] = SOLID; s.k[1] = 0.32; s.planes = 1; s.labels = 'head stack'; }
     },
     {
       title: '辨形',
       quote: '陽馬……用立方之棊一，塹堵、陽馬之棊各二。鱉臑……用塹堵、鱉臑之棊各二。',
       plain: '亮著的是會算的：立方算 1，塹堵是半個立方算 ½。暗的小陽馬、小鱉臑還不知道。',
       loop: { nodes: [3], round: 1, cut: 0 },
-      set: function (s) { s.u[1] = DIM; s.d[1] = SOLID; s.k[1] = 0.32; s.labels = 'head frac'; }
+      set: function (s) { s.u[1] = DIM; s.d[1] = SOLID; s.k[1] = 0.32; s.labels = 'head stack frac'; }
     },
     {
       title: '合方',
       quote: '按餘數具而可知者有一、二分之別，即一、二之爲率定矣。',
-      plain: '把會算的搬到前面排好：藍色湊成 2 個小方，紅色湊成 1 個小方，正好 2 : 1。原位留下淡淡的格子。',
+      plain: '把會算的搬到右邊疊好：藍色湊成 2 個小方，紅色湊成 1 個小方，正好 2 : 1。左邊原位留下淡淡的格子。',
       loop: { nodes: [3], round: 1, cut: 0, left: 1 },
       set: function (s) { s.u[1] = DIM; s.d[1] = SOLID; s.known[1] = 1; s.lv = 1; s.view = 'all'; s.labels = 'head stack tally ratio'; }
     },
@@ -68,7 +68,7 @@ window.JZ = window.JZ || {};
     }
   ];
   var DEEP = [
-    ['若爲數而窮之，置餘廣、袤、高之數各半之，則四分之三又可知也。', '會算的又搬到前面，排成第二排：藍色仍然是紅色的 2 倍。'],
+    ['若爲數而窮之，置餘廣、袤、高之數各半之，則四分之三又可知也。', '會算的又搬到右邊，疊成第二排：藍色仍然是紅色的 2 倍。'],
     ['半之彌少，其餘彌細。', '第 3 輪：上面每一排，藍色都正好是紅色的 2 倍寬。'],
     ['半之彌少，其餘彌細。', '第 4 輪：切的部分越來越小。'],
     ['至細曰微，微則無形。', '第 5 輪：剩下的縮成斜線上的細珠。'],
@@ -88,7 +88,7 @@ window.JZ = window.JZ || {};
   STEPS.push({
     title: '極限',
     quote: '由是言之，安取餘哉？',
-    plain: '一直循環下去，剩下的趨近於零，上面兩堆就是全部：藍色永遠是紅色的 2 倍。所以陽馬是立方的 1/3，鱉臑是 1/6。',
+    plain: '一直循環下去，剩下的趨近於零，右邊兩座塔就是全部：藍色永遠是紅色的 2 倍。所以陽馬是立方的 1/3，鱉臑是 1/6。',
     loop: { nodes: [], round: 0, cut: null },
     set: function (s) {
       for (var L = 1; L <= MAX; L++) { s.d[L] = SOLID; s.known[L] = 1; }
@@ -170,13 +170,14 @@ window.JZ = window.JZ || {};
     var near = function (v, f) { return Math.abs(v / unit - f) < 1e-6; };
     var yang = G.yangma(a, h, b), bie = G.bienao(a, h, b);
 
-    // 版面：陽馬在左欄 x∈[0,a]，鱉臑在右欄 x∈[Dx, Dx+a]。
-    // 會算的棊平鋪在各欄前方的地上：第 L 排從 zRow[L] 開始，一排排往前（往觀眾）排，越來越小。
-    var Dx = a * 2, gapZ = b * 0.35, sp = a * 0.08;
-    var zRow = [0, b + gapZ];
-    for (var r = 2; r <= MAX + 1; r++) zRow.push(zRow[r - 1] + b / Math.pow(2, r - 1) + gapZ / Math.pow(2, r - 1));
-    var zEnd = zRow[MAX + 1];
-    this.layout = { Dx: Dx, zEnd: zEnd };
+    // 版面：左邊是剩下的（陽馬欄 x∈[0,a]、鱉臑欄 x∈[Dx,Dx+a]，原位留淡影）；
+    // 右邊是會算的，拼成小方疊成兩座塔：藍塔在左、紅塔在右，並排方便比 2 : 1。第 L 排的底在 rowY[L]。
+    var Dx = a * 1.4, gapK = a * 0.7, sp = a * 0.08, gapY = h * 0.08;
+    var blueX = Dx + a + gapK, redX = blueX + a + a * 0.4;
+    var rowY = [0, 0];
+    for (var r = 2; r <= MAX + 1; r++) rowY.push(rowY[r - 1] + h / Math.pow(2, r - 1) + gapY / Math.pow(2, r - 2));
+    var towerTop = rowY[MAX + 1];
+    this.layout = { Dx: Dx, right: redX + a2 + a * 0.2, top: towerTop };
 
     // 一個塹堵的「補塊」：在 a/2 × h/2 × b/2 的小方裡，和斜面另一側的塹堵合起來剛好是這個小方
     var fill = G.keep(G.box(a2, h2, b2), new V3(1 / a, 1 / h, 0), 0.5, true);
@@ -277,7 +278,7 @@ window.JZ = window.JZ || {};
           var home = colOff(kn.col).add(o).addScaledVector(kn.poly.centroid, ps);
           var parent = colOff(kn.col).add(o).addScaledVector(src.centroid, ps);
           var slot = kn.col ? i : 2 * i + kn.slot;
-          var corner = new V3((kn.col ? Dx : 0) + slot * step, 0, zRow[L]);
+          var corner = new V3((kn.col ? redX : blueX) + slot * step, rowY[L], b2 - b2 * ps / 2);
           add(kn.geom, self._mat(kn.key, L, kn.color), L, home, ps, home.clone().sub(parent), {
             cell: kn.cell, label: kn.label,
             slotPos: corner.addScaledVector(kn.rel, ps), quat: kn.quat, scaleTo: kn.scale
@@ -314,16 +315,15 @@ window.JZ = window.JZ || {};
     var label = function (html, when, follow, pos, cls) {
       self.labels.push({ label: self.viewer.addLabel(html, cls), when: when, follow: follow, pos: pos, pFrom: new V3(), pTo: new V3() });
     };
-    var headY = function () { return h * 1.25; };
+    var headY = function () { return capY; };
     label('陽馬（藍）', 'head', null, function (st) { return new V3(a2, headY(st), b2); }, 'head');
     label('鱉臑（紅）', 'head', null, function (st) { return new V3(Dx + a2, headY(st), b2); }, 'head');
     this.objs.forEach(function (o) { if (o.L === 1 && o.mat.known) label(U.tex(o.label), 'frac', o, null, 'big'); });
-    var front = zEnd + b * 0.3, row1 = zRow[1] + b2 / 2;
-    label('會算的（藍）', 'stack', null, new V3(a2, 0, front), 'dim');
-    label('會算的（紅）', 'stack', null, new V3(Dx + a2 / 2, 0, front), 'dim');
-    label(U.tex('1+\\tfrac12+\\tfrac12=2'), 'tally', null, new V3(a2, h * 0.8, row1), 'dim');
-    label(U.tex('\\tfrac12+\\tfrac12=1'), 'tally', null, new V3(Dx + a2 / 2, h * 0.8, row1), 'dim');
-    label('2 ： 1', 'ratio', null, new V3((a + Dx) / 2, h * 0.2, row1), 'big');
+    var capY = Math.max(towerTop, h) + h * 0.25;
+    label('會算的（拼成小方）', 'stack', null, new V3((blueX + redX + a2) / 2, capY, b2), 'head');
+    label(U.tex('1+\\tfrac12+\\tfrac12=2'), 'tally', null, new V3(blueX + a2, h2 + h * 0.2, b2), 'dim');
+    label(U.tex('\\tfrac12+\\tfrac12=1'), 'tally', null, new V3(redX + a2 / 2, h2 + h * 0.2, b2), 'dim');
+    label('2 ： 1', 'ratio', null, new V3((blueX + a + redX) / 2, capY + h * 0.3, b2), 'big');
     label('2 個小陽馬', 'rest', null, new V3(a2, h * 0.5, b2), '');
     label('2 個小鱉臑', 'rest', null, new V3(Dx + a2, h * 0.5, b2), '');
     this.labels.forEach(function (l) { l.label.el.style.display = self.active ? '' : 'none'; });
@@ -408,8 +408,6 @@ window.JZ = window.JZ || {};
     else apply(1);
 
     if (!prev || prev.view !== st.view) this.frame(animate);
-    // 前方排了會算的棊之後，尺寸標示會和它們疊在一起，先收起來
-    if (this.active) this.viewer.holdMarks(st.view === 'all');
     this._updateDiagram();
     this._updateLoop();
     this._updateUI();
@@ -423,10 +421,9 @@ window.JZ = window.JZ || {};
     if (!this.layout) return;
     var d = this.dims, lay = this.layout, view = this.state ? this.state.view : 'whole';
     var lo = new V3(0, 0, 0), hi = new V3(d.a, d.h, d.b);
-    if (view !== 'whole') { hi.x = lay.Dx + d.a; hi.y = d.h * 1.35; }
-    if (view === 'all') hi.z = lay.zEnd + d.b * 0.4;
+    if (view !== 'whole') { hi.x = lay.right; hi.y = Math.max(d.h, lay.top) + d.h * 0.7; }
     var box = new THREE.Box3(lo, hi);
-    this.viewer.frame(box.getCenter(new V3()), box.getSize(new V3()).length() * (view === 'whole' ? 0.62 : 0.4), animate);
+    this.viewer.frame(box.getCenter(new V3()), box.getSize(new V3()).length() * (view === 'whole' ? 0.62 : 0.34), animate);
   };
 
   // ---------- 上方的循環圖 ----------
@@ -627,7 +624,6 @@ window.JZ = window.JZ || {};
     this.labels.forEach(function (l) { l.label.el.style.display = on ? '' : 'none'; });
     if (!on) this.setPlaying(false);
     else this._updateUI();
-    this.viewer.holdMarks(on && !!this.state && this.state.view === 'all');
   };
 
   JZ.Limit = Limit;

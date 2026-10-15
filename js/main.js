@@ -99,7 +99,7 @@
   }
 
   // 兩個分頁各記自己的視角；極限頁從比較正面的角度看，左右兩欄才不會重疊
-  var angles = { explore: { theta: 0.62, phi: 1.12 }, limit: { theta: 0.3, phi: 0.95 } }, shown = null;
+  var angles = { explore: { theta: 0.62, phi: 1.12 }, limit: { theta: 0.25, phi: 1.1 } }, shown = null;
 
   function show(name) {
     if (shown) angles[shown] = { theta: viewer.orbit.theta, phi: viewer.orbit.phi };
