@@ -49,6 +49,38 @@ window.JZ = window.JZ || {};
 
   JZ.util = { smooth: smooth, numTex: numTex, ratioTex: ratioTex, tex: tex };
 
+  // 字幕：一句原文、一行白話、一行算式，換句時淡出再淡入（主網站與觀眾頁共用）
+  JZ.caption = (function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var last = '', timer = null, pending = null;
+    return {
+      set: function (quote, plain, math) {
+        var key = quote + '|' + plain;
+        if (key === last) {
+          // 同一句只換算式；若還在淡出中，就改掉等著寫入的內容
+          if (pending) pending.math = math;
+          else $('cap-math').innerHTML = math || '';
+          return;
+        }
+        last = key;
+        pending = { quote: quote, plain: plain, math: math };
+        $('caption').classList.add('swap');
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          $('cap-quote').textContent = pending.quote;
+          $('cap-plain').textContent = pending.plain;
+          $('cap-math').innerHTML = pending.math || '';
+          pending = null;
+          $('caption').classList.remove('swap');
+        }, 250);
+      },
+      flash: function (text) {
+        last = '';
+        $('cap-plain').textContent = text;
+      }
+    };
+  })();
+
   // 被擋住的稜線：只在線落在別的面後方時才畫，而且畫得很淡。
   // 這樣透過半透明的面看到後面的形體時，它的稜線也看得到。
   JZ.hiddenEdges = function (edgeGeometry, opacity, material) {
@@ -87,6 +119,8 @@ window.JZ = window.JZ || {};
     this.raycaster = new THREE.Raycaster();
     this._pointer = null;
     this._hover = null;
+    this._touches = {};     // 正按在畫面上的指頭，用來做雙指縮放
+    this._pinch = null;
 
     canvas.addEventListener('pointerdown', function (e) { self._down(e); });
     canvas.addEventListener('pointermove', function (e) { self._move(e); });
@@ -272,8 +306,22 @@ window.JZ = window.JZ || {};
     return hits.length ? hits[0] : null;
   };
 
+  Viewer.prototype._touchSpread = function () {
+    var ids = Object.keys(this._touches);
+    if (ids.length < 2) return 0;
+    var a = this._touches[ids[0]], b = this._touches[ids[1]];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+
   Viewer.prototype._down = function (e) {
     this.canvas.setPointerCapture(e.pointerId);
+    this._touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (Object.keys(this._touches).length === 2) {
+      // 第二根指頭放下：改成捏合縮放
+      this._pinch = { spread: this._touchSpread(), radius: this.orbit.radius };
+      this._pointer = null;
+      return;
+    }
     var hit = this._pick(e);
     var p = { x: e.clientX, y: e.clientY, moved: 0, hit: hit, kind: 'orbit' };
     if (e.button === 2 || e.shiftKey) {
@@ -288,6 +336,12 @@ window.JZ = window.JZ || {};
   };
 
   Viewer.prototype._move = function (e) {
+    if (this._touches[e.pointerId]) this._touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+    if (this._pinch) {
+      var spread = this._touchSpread();
+      if (spread > 0) this.orbit.radius = this._pinch.radius * this._pinch.spread / spread;
+      return;
+    }
     var p = this._pointer;
     if (!p) {
       var hit = this._pick(e);
@@ -323,6 +377,12 @@ window.JZ = window.JZ || {};
   };
 
   Viewer.prototype._up = function (e) {
+    delete this._touches[e.pointerId];
+    if (this._pinch) {
+      if (Object.keys(this._touches).length < 2) this._pinch = null;
+      this._pointer = null;
+      return;
+    }
     var p = this._pointer;
     this._pointer = null;
     if (p && p.moved < 5 && this.mode && this.mode.onClick) this.mode.onClick(p.hit ? p.hit.object : null);

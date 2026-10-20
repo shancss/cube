@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>劉徽的極限</title>
+<link rel="stylesheet" href="lib/katex/katex.min.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/audience.css">
+</head>
+<body class="audience" data-tab="limit">
+
+<canvas id="stage"></canvas>
+<div id="labels"></div>
+
+<div id="au-top"><span id="lm-title"></span></div>
+<button id="au-full" class="au-corner" hidden>全螢幕</button>
+
+<button id="lm-prev" class="au-step au-prev" aria-label="上一步">◀</button>
+<button id="lm-next" class="au-step au-next" aria-label="下一步">▶</button>
+
+<div id="au-bottom">
+  <div id="caption">
+    <div id="cap-quote"></div>
+    <div id="cap-plain"></div>
+    <div id="cap-math"></div>
+  </div>
+</div>
+
+<div id="au-rotate" hidden>
+  <div class="au-rotate-box">
+    <div class="au-phone" aria-hidden="true"></div>
+    <div class="au-rotate-title">請把手機轉成橫向</div>
+    <div class="au-rotate-sub">劉徽的極限：陽馬為什麼是鱉臑的 2 倍</div>
+    <button id="au-full2" class="au-btn" hidden>全螢幕並轉橫向</button>
+    <button id="au-skip" class="au-link">直接看</button>
+  </div>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/katex/katex.min.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/viewer.js"></script>
+<script src="js/limit.js"></script>
+<script src="js/audience.js"></script>
+</body>
+</html>

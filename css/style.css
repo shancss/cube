@@ -13,6 +13,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; overflow: hidden; }
 body {
   background: var(--bg);
@@ -81,6 +82,19 @@ body[data-tab=limit] .tab[data-tab=limit] { color: var(--text); border-bottom-co
 #dims-pop .chips { flex-direction: column; align-items: flex-start; gap: 2px; }
 #dims-pop .chips button { text-align: left; }
 body[data-tab=limit] .ft-only { display: none; }
+
+/* ---------- 觀眾 QR ---------- */
+body[data-tab=explore] #qr-toggle { display: none; }
+#qr-overlay {
+  position: fixed; inset: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(17, 17, 17, .96);
+  cursor: pointer;
+}
+.qr-box { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+#qr-code svg { display: block; width: min(62vh, 80vw); height: auto; border-radius: 8px; }
+.qr-title { font-size: clamp(18px, 2.4vw, 28px); color: #fff; }
+#qr-url { font-family: KaTeX_Main, "Times New Roman", serif; font-size: clamp(15px, 1.6vw, 20px); color: var(--blue); user-select: all; }
 
 /* ---------- 共用小元件 ---------- */
 .group-title {

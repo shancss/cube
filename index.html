@@ -19,10 +19,20 @@
   </nav>
   <div class="top-right">
     <button id="dims-toggle" class="link"><span id="top-a">廣</span> <b id="now-a"></b>　<span id="top-b">袤</span> <b id="now-b"></b>　高 <b id="now-h"></b></button>
+    <button id="qr-toggle" class="link" title="顯示觀眾用手機掃的 QR code">觀眾 QR</button>
     <button id="marks-toggle" class="link" title="顯示或隱藏立體上的廣、袤、高">隱藏標示</button>
     <button id="ui-toggle" class="link" title="隱藏或顯示介面（H）">隱藏介面</button>
   </div>
 </header>
+
+<div id="qr-overlay" hidden>
+  <div class="qr-box">
+    <div id="qr-code"></div>
+    <div class="qr-title">用手機掃描，自己操作「劉徽的極限」</div>
+    <div id="qr-url"></div>
+    <div class="hint">請把手機轉成橫向。點任意處關閉。</div>
+  </div>
+</div>
 
 <div id="dims-pop" class="ui" hidden>
   <label><em id="lab-a">廣</em><input id="dim-a" type="number" min="0.5" max="500" step="0.5"><span>尺</span></label>
@@ -132,6 +142,7 @@
 
 <script src="lib/three.min.js"></script>
 <script src="lib/katex/katex.min.js"></script>
+<script src="lib/qrcode.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/viewer.js"></script>
 <script src="js/explore.js"></script>

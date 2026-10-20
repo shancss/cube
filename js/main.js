@@ -9,37 +9,6 @@
   var dimsOf = { explore: { a: 5, b: 7, h: 8 }, fangting: { a: 3, b: 1, h: 1 }, limit: { a: 2, b: 2, h: 2 } };
   JZ.dims = dimsOf.explore;
 
-  // 字幕：一句原文、一行白話、一行算式，換句時淡出再淡入
-  JZ.caption = (function () {
-    var box = $('caption'), last = '', timer = null, pending = null;
-    return {
-      set: function (quote, plain, math) {
-        var key = quote + '|' + plain;
-        if (key === last) {
-          // 同一句只換算式；若還在淡出中，就改掉等著寫入的內容
-          if (pending) pending.math = math;
-          else $('cap-math').innerHTML = math || '';
-          return;
-        }
-        last = key;
-        pending = { quote: quote, plain: plain, math: math };
-        box.classList.add('swap');
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-          $('cap-quote').textContent = pending.quote;
-          $('cap-plain').textContent = pending.plain;
-          $('cap-math').innerHTML = pending.math || '';
-          pending = null;
-          box.classList.remove('swap');
-        }, 250);
-      },
-      flash: function (text) {
-        last = '';
-        $('cap-plain').textContent = text;
-      }
-    };
-  })();
-
   var viewer = new JZ.Viewer($('stage'), $('labels'));
   var tabs = { explore: new JZ.Explore(viewer), limit: new JZ.Limit(viewer) };
   var current = 'explore';
@@ -166,6 +135,23 @@
     viewer.setInsets(insets());
   }
   $('ui-toggle').addEventListener('click', toggleClean);
+
+  // 觀眾 QR：全螢幕顯示觀眾頁網址的 QR code，投影時給台下掃
+  var AUDIENCE_URL = 'https://shancss.github.io/cube/audience.html';
+  function toggleQR(on) {
+    var box = $('qr-overlay');
+    if (on && !$('qr-code').firstChild && window.qrcode) {
+      var qr = window.qrcode(0, 'M');
+      qr.addData(AUDIENCE_URL);
+      qr.make();
+      $('qr-code').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+      $('qr-url').textContent = AUDIENCE_URL;
+    }
+    box.hidden = !on;
+  }
+  $('qr-toggle').addEventListener('click', function () { toggleQR(true); });
+  $('qr-overlay').addEventListener('click', function () { toggleQR(false); });
+  window.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleQR(false); });
   $('marks-toggle').addEventListener('click', function () {
     viewer.showMarks(!viewer.marksOn);
     this.textContent = viewer.marksOn ? '隱藏標示' : '顯示標示';

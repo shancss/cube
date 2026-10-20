@@ -4,6 +4,7 @@ window.JZ = window.JZ || {};
   'use strict';
   var V3 = THREE.Vector3, C = JZ.colors, G = JZ.geo, U = JZ.util;
   var $ = function (id) { return document.getElementById(id); };
+  var has = function (id) { return !!document.getElementById(id); };
   var SVG = 'http://www.w3.org/2000/svg';
 
   var MAX = 6;                       // 最多分割幾層
@@ -113,7 +114,7 @@ window.JZ = window.JZ || {};
     this.mats = [];
     this.labels = [];
     this.planes = null;
-    this._buildDiagram();
+    if (has('lm-svg')) this._buildDiagram();
     this._bindUI();
   }
 
@@ -479,6 +480,7 @@ window.JZ = window.JZ || {};
   };
 
   Limit.prototype._updateLoop = function () {
+    if (!has('lm-loop-svg')) return;
     if (!this.loopNodes) this._buildLoop();
     var lp = STEPS[this.step].loop, quarter = function (n) {
       return n === 0 ? '整個塹堵' : U.tex('\\tfrac{1}{' + Math.pow(4, n) + '}') + ' 個塹堵';
@@ -498,8 +500,10 @@ window.JZ = window.JZ || {};
     var self = this;
     clearInterval(this._timer);
     this.playing = on;
-    $('lm-play').textContent = on ? '暫停' : '播放';
-    $('lm-play').classList.toggle('on', on);
+    if (has('lm-play')) {
+      $('lm-play').textContent = on ? '暫停' : '播放';
+      $('lm-play').classList.toggle('on', on);
+    }
     if (!on) return;
     if (this.step >= STEPS.length - 1) this.goTo(0, true);
     this._timer = setInterval(function () {
@@ -545,6 +549,7 @@ window.JZ = window.JZ || {};
   };
 
   Limit.prototype._updateDiagram = function () {
+    if (!this.dgLevels) return;
     var st = this.state, n = st.lv, d = JZ.dims;
     this.dgLevels.forEach(function (g, i) { g.classList.toggle('on', i < n); });
     var s = 100 * Math.pow(0.5, n), x = 100 - s;
@@ -583,6 +588,7 @@ window.JZ = window.JZ || {};
   };
 
   Limit.prototype._hover = function (obj) {
+    if (!this.dgLevels) return;
     var svg = $('lm-svg');
     Array.prototype.forEach.call(svg.querySelectorAll('.hl'), function (e) { e.classList.remove('hl'); });
     if (!obj) return;
@@ -602,8 +608,10 @@ window.JZ = window.JZ || {};
       math = '陽馬 ' + U.tex('=\\tfrac{1}{3}') + ' 廣袤高 ' + U.tex('=' + U.numTex(d.a * d.h * d.b / 3)) +
         '　　鱉臑 ' + U.tex('=\\tfrac{1}{6}') + ' 廣袤高 ' + U.tex('=' + U.numTex(d.a * d.h * d.b / 6));
     }
-    $('lm-slider').max = STEPS.length - 1;
-    $('lm-slider').value = this.step;
+    if (has('lm-slider')) {
+      $('lm-slider').max = STEPS.length - 1;
+      $('lm-slider').value = this.step;
+    }
     $('lm-title').textContent = (this.step + 1) + ' / ' + STEPS.length + '　' + step.title;
     $('lm-prev').disabled = this.step === 0;
     $('lm-next').disabled = this.step === STEPS.length - 1;
@@ -614,8 +622,8 @@ window.JZ = window.JZ || {};
     var self = this;
     $('lm-prev').addEventListener('click', function () { self.setPlaying(false); self.prev(); });
     $('lm-next').addEventListener('click', function () { self.setPlaying(false); self.next(); });
-    $('lm-play').addEventListener('click', function () { self.setPlaying(!self.playing); });
-    $('lm-slider').addEventListener('input', function () { self.setPlaying(false); self.goTo(+this.value, true); });
+    if (has('lm-play')) $('lm-play').addEventListener('click', function () { self.setPlaying(!self.playing); });
+    if (has('lm-slider')) $('lm-slider').addEventListener('input', function () { self.setPlaying(false); self.goTo(+this.value, true); });
   };
 
   Limit.prototype.setActive = function (on) {
