@@ -145,7 +145,6 @@
       qr.addData(AUDIENCE_URL);
       qr.make();
       $('qr-code').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
-      $('qr-url').textContent = AUDIENCE_URL;
     }
     box.hidden = !on;
   }
